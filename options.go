@@ -74,6 +74,6 @@ func defaultConfig(apiKey string) clientConfig {
 		transport:   TransportGRPC,
 		timeout:     30 * time.Second,
 		retryPolicy: DefaultRetryPolicy(),
-		userAgent:   "hivemind-go/0.1.0",
+		userAgent:   "hivemind-go-sdk/0.1.0",
 	}
 }

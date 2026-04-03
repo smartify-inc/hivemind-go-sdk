@@ -1,4 +1,4 @@
-module github.com/smartifyai/hivemind-go
+module github.com/smartify-inc/hivemind-go-sdk
 
 go 1.24.0
 

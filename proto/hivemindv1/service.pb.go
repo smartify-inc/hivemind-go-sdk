@@ -2071,7 +2071,7 @@ const file_service_proto_rawDesc = "" +
 	"\x0eRecordFeedback\x12\".hivemind.v1.RecordFeedbackRequest\x1a#.hivemind.v1.RecordFeedbackResponse\x12G\n" +
 	"\bGetStats\x12\x1c.hivemind.v1.GetStatsRequest\x1a\x1d.hivemind.v1.GetStatsResponse\x12k\n" +
 	"\x14TriggerConsolidation\x12(.hivemind.v1.TriggerConsolidationRequest\x1a).hivemind.v1.TriggerConsolidationResponse\x12P\n" +
-	"\vHealthCheck\x12\x1f.hivemind.v1.HealthCheckRequest\x1a .hivemind.v1.HealthCheckResponseB4Z2github.com/smartifyai/hivemind-go/proto/hivemindv1b\x06proto3"
+	"\vHealthCheck\x12\x1f.hivemind.v1.HealthCheckRequest\x1a .hivemind.v1.HealthCheckResponseB:Z8github.com/smartify-inc/hivemind-go-sdk/proto/hivemindv1b\x06proto3"
 
 var (
 	file_service_proto_rawDescOnce sync.Once

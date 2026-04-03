@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	hivemind "github.com/smartifyai/hivemind-go"
+	hivemind "github.com/smartify-inc/hivemind-go-sdk"
 )
 
 // MockCall records a single method invocation on the mock client.

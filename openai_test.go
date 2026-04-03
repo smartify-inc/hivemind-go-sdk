@@ -8,8 +8,8 @@ import (
 
 	openai "github.com/sashabaranov/go-openai"
 
-	hivemind "github.com/smartifyai/hivemind-go"
-	"github.com/smartifyai/hivemind-go/mock"
+	hivemind "github.com/smartify-inc/hivemind-go-sdk"
+	"github.com/smartify-inc/hivemind-go-sdk/mock"
 )
 
 // NOTE: These tests use the build tag "openai" so they only compile when

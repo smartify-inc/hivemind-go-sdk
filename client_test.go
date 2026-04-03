@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	hivemind "github.com/smartifyai/hivemind-go"
+	hivemind "github.com/smartify-inc/hivemind-go-sdk"
 )
 
 func TestNewClientRequiresApiKey(t *testing.T) {
@@ -78,7 +78,7 @@ func TestDefaultConfig(t *testing.T) {
 	if timeout != 30*time.Second {
 		t.Errorf("timeout = %v, want 30s", timeout)
 	}
-	if userAgent != "hivemind-go/0.1.0" {
-		t.Errorf("userAgent = %q, want %q", userAgent, "hivemind-go/0.1.0")
+	if userAgent != "hivemind-go-sdk/0.1.0" {
+		t.Errorf("userAgent = %q, want %q", userAgent, "hivemind-go-sdk/0.1.0")
 	}
 }

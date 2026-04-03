@@ -2,7 +2,7 @@
 
 Go client for [Smartify Hivemind](https://smartify.ai) — persistent memory and context for multi-agent AI. The package speaks to the public Hivemind API over **gRPC** (default) or **REST**.
 
-**Module:** `github.com/smartifyai/hivemind-go`
+**Module:** `github.com/smartify-inc/hivemind-go-sdk`
 
 ## Requirements
 
@@ -11,7 +11,7 @@ Go client for [Smartify Hivemind](https://smartify.ai) — persistent memory and
 ## Install
 
 ```bash
-go get github.com/smartifyai/hivemind-go@latest
+go get github.com/smartify-inc/hivemind-go-sdk@latest
 ```
 
 Set your API key (for example `HIVEMIND_API_KEY`). Keys starting with `sk_live_` target production; other keys (e.g. `sk_test_`) use staging endpoints unless you override the endpoint.
@@ -28,7 +28,7 @@ import (
 	"log"
 	"os"
 
-	hivemind "github.com/smartifyai/hivemind-go"
+	hivemind "github.com/smartify-inc/hivemind-go-sdk"
 )
 
 func main() {
@@ -106,7 +106,7 @@ go test -tags=openai ./...
 import (
 	"context"
 	openai "github.com/sashabaranov/go-openai"
-	hivemind "github.com/smartifyai/hivemind-go"
+	hivemind "github.com/smartify-inc/hivemind-go-sdk"
 )
 
 wrapped := hivemind.WrapOpenAI(openaiClient, hivemindClient,
@@ -120,7 +120,7 @@ Call `wrapped.End(ctx)` when finished to end the Hivemind session.
 
 ## Testing
 
-The subpackage `github.com/smartifyai/hivemind-go/mock` provides a `mock.Client` that implements `hivemind.Client` and records calls for tests.
+The subpackage `github.com/smartify-inc/hivemind-go-sdk/mock` provides a `mock.Client` that implements `hivemind.Client` and records calls for tests.
 
 ## License
 

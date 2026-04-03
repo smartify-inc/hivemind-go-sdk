@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package hivemind.v1;
 
-option go_package = "github.com/smartifyai/hivemind-go/proto/hivemindv1";
+option go_package = "github.com/smartify-inc/hivemind-go-sdk/proto/hivemindv1";
 
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";

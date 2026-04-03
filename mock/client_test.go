@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	hivemind "github.com/smartifyai/hivemind-go"
-	"github.com/smartifyai/hivemind-go/mock"
+	hivemind "github.com/smartify-inc/hivemind-go-sdk"
+	"github.com/smartify-inc/hivemind-go-sdk/mock"
 )
 
 func TestMockClientReturnsConfiguredResponse(t *testing.T) {

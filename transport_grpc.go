@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	pb "github.com/smartifyai/hivemind-go/proto/hivemindv1"
+	pb "github.com/smartify-inc/hivemind-go-sdk/proto/hivemindv1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"

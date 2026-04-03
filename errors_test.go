@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	hivemind "github.com/smartifyai/hivemind-go"
+	hivemind "github.com/smartify-inc/hivemind-go-sdk"
 )
 
 func TestHivemindErrorMessage(t *testing.T) {
