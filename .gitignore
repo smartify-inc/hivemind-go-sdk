@@ -1,4 +1,4 @@
-# Hivemind Go SDK — use alone as repo root or under monorepo.
+# Hivemind Go SDK (standalone repository root).
 
 # Binaries
 *.exe

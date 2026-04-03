@@ -67,7 +67,7 @@ For conversation-scoped delta context, use `GetContextWithConversation(ctx, maxT
 
 ## Quick start — low-level `Client`
 
-Use `hivemind.NewClient` and the `Client` interface when you want full control over session and context calls. See [specification/GOLANG_SDK.md](../../specification/GOLANG_SDK.md) in this monorepo for a full walkthrough.
+Use `hivemind.NewClient` and the `Client` interface when you want full control over session and context calls. Reference docs: [pkg.go.dev/github.com/smartify-inc/hivemind-go-sdk](https://pkg.go.dev/github.com/smartify-inc/hivemind-go-sdk) and the tests in this repository for examples.
 
 ## Transports and endpoints
 
