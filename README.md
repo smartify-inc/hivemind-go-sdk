@@ -1,12 +1,8 @@
 # Hivemind Go SDK
 
-Go client for [Smartify Hivemind](https://smartify.ai) — persistent memory and context for multi-agent AI. The package speaks to the public Hivemind API over **gRPC** (default) or **REST**.
+Go client for [Smartify Hivemind](https://smartify.ai) — memory and context for AI agents. Talks to the Hivemind API over gRPC (default) or REST.
 
-**Module:** `github.com/smartify-inc/hivemind-go-sdk`
-
-## Requirements
-
-- Go 1.26+
+**Module:** `github.com/smartify-inc/hivemind-go-sdk` · **Go:** 1.26+
 
 ## Install
 
@@ -14,129 +10,34 @@ Go client for [Smartify Hivemind](https://smartify.ai) — persistent memory and
 go get github.com/smartify-inc/hivemind-go-sdk@latest
 ```
 
-Set your API key (for example `HIVEMIND_API_KEY`). Keys starting with `sk_live_` target production; other keys (e.g. `sk_test_`) use staging endpoints unless you override the endpoint.
+Set `HIVEMIND_API_KEY`. `sk_live_…` keys use production; other keys use staging unless you override the endpoint.
 
-## Quick start — `AgentSession` (hooks)
-
-`AgentSession` starts a run, fetches packed context for each LLM turn, records assistant output, and on `End` records the episode.
+## Quick start
 
 ```go
-package main
+client, err := hivemind.NewClient(os.Getenv("HIVEMIND_API_KEY"))
+if err != nil { /* ... */ }
+defer client.Close()
 
-import (
-	"context"
-	"log"
-	"os"
-
-	hivemind "github.com/smartify-inc/hivemind-go-sdk"
+session := hivemind.NewSession(client,
+    hivemind.WithWorkflowID("my-workflow"),
+    hivemind.WithTask("Short description of the task"),
 )
 
-func main() {
-	client, err := hivemind.NewClient(os.Getenv("HIVEMIND_API_KEY"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer client.Close()
+ctxText, err := session.GetContext(context.Background(), 4000)
+// Feed ctxText into your LLM (e.g. system message).
 
-	ctx := context.Background()
-	session := hivemind.NewSession(client,
-		hivemind.WithWorkflowID("blog-writer"),
-		hivemind.WithTask("Write about caching"),
-	)
-
-	contextText, err := session.GetContext(ctx, 4000)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_ = contextText // inject into your LLM system / messages
-
-	// After your LLM returns:
-	if err := session.RecordResponse(ctx, "assistant reply text here", 150); err != nil {
-		log.Fatal(err)
-	}
-
-	endResp, err := session.End(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_ = endResp // episode + savings stats
-}
+// After the model replies:
+session.RecordResponse(context.Background(), replyText, tokensUsed)
+session.End(context.Background())
 ```
 
-For conversation-scoped delta context, use `GetContextWithConversation(ctx, maxTokens, conversationID)`.
+Conversation-scoped context: `GetContextWithConversation(ctx, maxTokens, conversationID)`.
 
-## Quick start — low-level `Client`
+REST client: `NewClient(key, hivemind.WithTransport(hivemind.TransportREST))`. Other options include `WithEndpoint`, `WithTimeout`, `WithRetryPolicy` — see [pkg.go.dev](https://pkg.go.dev/github.com/smartify-inc/hivemind-go-sdk).
 
-Use `hivemind.NewClient` and the `Client` interface when you want full control over session and context calls. Reference docs: [pkg.go.dev/github.com/smartify-inc/hivemind-go-sdk](https://pkg.go.dev/github.com/smartify-inc/hivemind-go-sdk) and the tests in this repository for examples.
-
-## Transports and endpoints
-
-| Option | Default |
-|--------|---------|
-| Transport | gRPC (`TransportGRPC`) |
-| Live API key (`sk_live_…`) | `grpc.smartify.ai:443` or `https://api.smartify.ai` (REST) |
-| Non-live key | `grpc-staging.smartify.ai:443` or `https://api-staging.smartify.ai` (REST) |
-
-Switch to REST:
-
-```go
-client, err := hivemind.NewClient(apiKey, hivemind.WithTransport(hivemind.TransportREST))
-```
-
-Override host explicitly:
-
-```go
-client, err := hivemind.NewClient(apiKey,
-	hivemind.WithTransport(hivemind.TransportREST),
-	hivemind.WithEndpoint("https://api.example.com"),
-)
-```
-
-Other useful options: `WithTimeout`, `WithHivemindID`, `WithRetryPolicy`, `WithUserAgent`, `WithLogger`.
-
-## OpenAI helper (optional build tag)
-
-Optional integration with the official OpenAI Go SDK ([`openai/openai-go`](https://github.com/openai/openai-go)) lives behind the `openai` build tag. The module still lists that dependency so `go mod download` resolves it; only the wrapper sources are tag-gated.
-
-```bash
-go test -tags=openai ./...
-```
-
-```go
-import (
-	"context"
-	"os"
-
-	"github.com/openai/openai-go/v3"
-	"github.com/openai/openai-go/v3/option"
-
-	hivemind "github.com/smartify-inc/hivemind-go-sdk"
-)
-
-hmClient, _ := hivemind.NewClient(os.Getenv("HIVEMIND_API_KEY"))
-defer hmClient.Close()
-
-oai := openai.NewClient(option.WithAPIKey(os.Getenv("OPENAI_API_KEY")))
-
-wrapped := hivemind.WrapOpenAI(oai, hmClient,
-	hivemind.WithWorkflowID("blog-writer"),
-	hivemind.WithTask("Write about caching"),
-)
-
-resp, err := wrapped.CreateChatCompletion(ctx, openai.ChatCompletionNewParams{
-	Model: openai.ChatModelGPT4o,
-	Messages: []openai.ChatCompletionMessageParamUnion{
-		openai.UserMessage("Write a haiku about caching."),
-	},
-})
-```
-
-Call `wrapped.End(ctx)` when finished to end the Hivemind session. The `Inner` and `Session` fields are exported if you need direct access.
-
-## Testing
-
-The subpackage `github.com/smartify-inc/hivemind-go-sdk/mock` provides a `mock.Client` that implements `hivemind.Client` and records calls for tests.
+Optional OpenAI integration is behind the `openai` build tag. Tests and `mock` client: same module path, subpackage `mock`.
 
 ## License
 
-Copyright 2026 Smartify Inc. Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
+Apache 2.0 — [LICENSE](LICENSE).
