@@ -1,0 +1,208 @@
+syntax = "proto3";
+
+package hivemind.v1;
+
+option go_package = "github.com/smartifyai/hivemind-go/proto/hivemindv1";
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+service HivemindService {
+  rpc StartSession(StartSessionRequest) returns (StartSessionResponse);
+  rpc UpdateContext(UpdateContextRequest) returns (UpdateContextResponse);
+  rpc GetContextWindow(GetContextWindowRequest) returns (GetContextWindowResponse);
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse);
+  rpc Retrieve(RetrieveRequest) returns (RetrieveResponse);
+  rpc RecordEpisode(RecordEpisodeRequest) returns (RecordEpisodeResponse);
+  rpc RecordFeedback(RecordFeedbackRequest) returns (RecordFeedbackResponse);
+  rpc GetStats(GetStatsRequest) returns (GetStatsResponse);
+  rpc TriggerConsolidation(TriggerConsolidationRequest) returns (TriggerConsolidationResponse);
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+message PlanStep {
+  int32 index = 1;
+  string action = 2;
+  string description = 3;
+}
+
+message Plan {
+  repeated PlanStep steps = 1;
+  int32 current_index = 2;
+}
+
+message StartSessionRequest {
+  string run_id = 1;
+  string workflow_id = 2;
+  string task = 3;
+  Plan plan = 4;
+  string hivemind_id = 5;
+}
+
+message StartSessionResponse {
+  string run_id = 1;
+  string hivemind_id = 2;
+  string status = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message UpdateContextRequest {
+  string run_id = 1;
+  string field = 2;
+  google.protobuf.Struct data = 3;
+}
+
+message UpdateContextResponse {}
+
+message GetContextWindowRequest {
+  string run_id = 1;
+  string agent_id = 2;
+  int32 max_tokens = 3;
+  string conversation_id = 4;
+  string context_mode = 5;
+}
+
+message GetContextWindowResponse {
+  string context = 1;
+  string mode_used = 2;
+  int32 turn_number = 3;
+  int32 total_tokens = 4;
+  int32 delta_tokens_saved = 5;
+  int32 full_context_tokens = 6;
+}
+
+message EndSessionRequest {
+  string run_id = 1;
+}
+
+message TokensSaved {
+  int64 delta_context = 1;
+  int64 compression = 2;
+  int64 cross_execution = 3;
+}
+
+message EndSessionResponse {
+  string run_id = 1;
+  string status = 2;
+  string episode_id = 3;
+  string recording_status = 4;
+  double compression_ratio = 5;
+  TokensSaved tokens_saved = 6;
+  string warning = 7;
+}
+
+message RetrieveRequest {
+  string intent = 1;
+  string task_type = 2;
+  repeated string constraints = 3;
+  int32 max_tokens = 4;
+  int32 depth = 5;
+  double min_confidence = 6;
+  string scope_type = 7;
+  string scope_id = 8;
+  bool include_unscoped = 9;
+}
+
+message RetrieveResponse {
+  string context_text = 1;
+  int32 context_tokens = 2;
+  double budget_used = 3;
+  int32 skills_count = 4;
+  int32 patterns_count = 5;
+  int32 episodes_count = 6;
+  double retrieval_latency_ms = 7;
+  int64 tokens_saved_estimate = 8;
+}
+
+message StepResult {
+  string action = 1;
+  string outcome = 2;
+  int32 tokens_used = 3;
+  int32 duration_ms = 4;
+  string rationale = 5;
+}
+
+message RecordEpisodeRequest {
+  string workflow_id = 1;
+  string run_id = 2;
+  string task_description = 3;
+  map<string, StepResult> step_results = 4;
+  google.protobuf.Struct inputs = 5;
+  google.protobuf.Struct outputs = 6;
+  int32 total_tokens = 7;
+  double total_cost = 8;
+  int32 duration_ms = 9;
+  string scope_type = 10;
+  string scope_id = 11;
+}
+
+message RecordEpisodeResponse {
+  string episode_id = 1;
+  string task_type = 2;
+  double compression_ratio = 3;
+  int32 insights_extracted = 4;
+  TokensSaved tokens_saved = 5;
+}
+
+message RecordFeedbackRequest {
+  string episode_id = 1;
+  double score = 2;
+  string notes = 3;
+}
+
+message RecordFeedbackResponse {}
+
+message GetStatsRequest {}
+
+message TokensSavedBySource {
+  int64 delta_context = 1;
+  int64 cross_execution = 2;
+  int64 compression = 3;
+}
+
+message TokensSavedStats {
+  int64 total = 1;
+  TokensSavedBySource by_source = 2;
+  string period = 3;
+  double cost_savings_usd = 4;
+}
+
+message KnowledgeStateDistribution {
+  int32 embryonic = 1;
+  int32 growing = 2;
+  int32 mature = 3;
+}
+
+message GetStatsResponse {
+  int32 total_episodes = 1;
+  int32 total_knowledge_nodes = 2;
+  int32 total_edges = 3;
+  double compression_ratio_avg = 4;
+  TokensSavedStats tokens_saved = 5;
+  int32 active_sessions = 6;
+  google.protobuf.Timestamp last_consolidation_at = 7;
+  KnowledgeStateDistribution knowledge_state_distribution = 8;
+}
+
+message TriggerConsolidationRequest {}
+
+message TriggerConsolidationResponse {
+  string consolidation_id = 1;
+  string status = 2;
+  int32 episodes_queued = 3;
+}
+
+message HealthCheckRequest {}
+
+message ServiceHealth {
+  string aurora = 1;
+  string redis = 2;
+  string neo4j = 3;
+  string pgvector = 4;
+}
+
+message HealthCheckResponse {
+  string status = 1;
+  string version = 2;
+  ServiceHealth services = 3;
+}
