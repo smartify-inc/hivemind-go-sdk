@@ -131,7 +131,7 @@ resp, err := wrapped.CreateChatCompletion(ctx, openai.ChatCompletionNewParams{
 })
 ```
 
-Use `hivemind.WrapOpenAIWithContextLimit` if you need a different Hivemind context token budget than the default (4000). Call `wrapped.End(ctx)` when finished to end the Hivemind session.
+Call `wrapped.End(ctx)` when finished to end the Hivemind session. The `Inner` and `Session` fields are exported if you need direct access.
 
 ## Testing
 

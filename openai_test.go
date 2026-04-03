@@ -23,25 +23,22 @@ func testOpenAIClient(t *testing.T) openai.Client {
 
 func TestWrapOpenAIConstruction(t *testing.T) {
 	mc := mock.NewClient()
-	oaiClient := testOpenAIClient(t)
-
-	wrapped := hivemind.WrapOpenAI(oaiClient, mc,
+	wrapped := hivemind.WrapOpenAI(testOpenAIClient(t), mc,
 		hivemind.WithWorkflowID("wf-1"),
 		hivemind.WithTask("test"),
 		hivemind.WithRunID("run-oai"),
 	)
 
-	if wrapped.Session().RunID() != "run-oai" {
-		t.Errorf("RunID = %q, want %q", wrapped.Session().RunID(), "run-oai")
+	if wrapped.Session.RunID() != "run-oai" {
+		t.Errorf("RunID = %q, want %q", wrapped.Session.RunID(), "run-oai")
 	}
 }
 
 func TestWrapOpenAIEndWithoutStart(t *testing.T) {
 	mc := mock.NewClient()
-	oaiClient := testOpenAIClient(t)
 	ctx := context.Background()
 
-	wrapped := hivemind.WrapOpenAI(oaiClient, mc,
+	wrapped := hivemind.WrapOpenAI(testOpenAIClient(t), mc,
 		hivemind.WithWorkflowID("wf-1"),
 		hivemind.WithTask("no-start"),
 		hivemind.WithRunID("run-ns"),
