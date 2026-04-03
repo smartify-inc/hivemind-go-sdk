@@ -96,7 +96,7 @@ Other useful options: `WithTimeout`, `WithHivemindID`, `WithRetryPolicy`, `WithU
 
 ## OpenAI helper (optional build tag)
 
-Optional integration with [`github.com/sashabaranov/go-openai`](https://github.com/sashabaranov/go-openai) lives behind the `openai` build tag so the dependency stays optional.
+Optional integration with the official OpenAI Go SDK ([`openai/openai-go`](https://github.com/openai/openai-go)) lives behind the `openai` build tag. The module still lists that dependency so `go mod download` resolves it; only the wrapper sources are tag-gated.
 
 ```bash
 go test -tags=openai ./...
@@ -105,18 +105,33 @@ go test -tags=openai ./...
 ```go
 import (
 	"context"
-	openai "github.com/sashabaranov/go-openai"
+	"os"
+
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
+
 	hivemind "github.com/smartify-inc/hivemind-go-sdk"
 )
 
-wrapped := hivemind.WrapOpenAI(openaiClient, hivemindClient,
+hmClient, _ := hivemind.NewClient(os.Getenv("HIVEMIND_API_KEY"))
+defer hmClient.Close()
+
+oai := openai.NewClient(option.WithAPIKey(os.Getenv("OPENAI_API_KEY")))
+
+wrapped := hivemind.WrapOpenAI(oai, hmClient,
 	hivemind.WithWorkflowID("blog-writer"),
 	hivemind.WithTask("Write about caching"),
 )
-resp, err := wrapped.CreateChatCompletion(ctx, openai.ChatCompletionRequest{ /* model, messages, ... */ })
+
+resp, err := wrapped.CreateChatCompletion(ctx, openai.ChatCompletionNewParams{
+	Model: openai.ChatModelGPT4o,
+	Messages: []openai.ChatCompletionMessageParamUnion{
+		openai.UserMessage("Write a haiku about caching."),
+	},
+})
 ```
 
-Call `wrapped.End(ctx)` when finished to end the Hivemind session.
+Use `hivemind.WrapOpenAIWithContextLimit` if you need a different Hivemind context token budget than the default (4000). Call `wrapped.End(ctx)` when finished to end the Hivemind session.
 
 ## Testing
 

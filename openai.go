@@ -6,24 +6,40 @@ import (
 	"context"
 	"fmt"
 
-	openai "github.com/sashabaranov/go-openai"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 )
 
-// WrappedOpenAI wraps an OpenAI client with automatic Hivemind context
-// injection and response recording.
+// WrappedOpenAI wraps the official OpenAI Go client ([openai.Client]) with
+// automatic Hivemind context injection and response recording.
+//
+// See: https://github.com/openai/openai-go
 type WrappedOpenAI struct {
-	inner   *openai.Client
-	session *AgentSession
+	inner         openai.Client
+	session       *AgentSession
+	contextMaxTok int
 }
 
-// WrapOpenAI wraps an OpenAI client with Hivemind hooks.
-// The returned WrappedOpenAI will automatically inject context into prompts
-// and record responses on every CreateChatCompletion call.
-func WrapOpenAI(openaiClient *openai.Client, hivemindClient Client, opts ...SessionOption) *WrappedOpenAI {
+// WrapOpenAI wraps an OpenAI client from [github.com/openai/openai-go/v3] with Hivemind hooks.
+// Pass the value returned by [openai.NewClient] (or a copy with your options).
+//
+// contextMaxTokens sets the max token budget passed to [AgentSession.GetContext] on each
+// completion (default 4000 if zero).
+func WrapOpenAI(openaiClient openai.Client, hivemindClient Client, opts ...SessionOption) *WrappedOpenAI {
+	return WrapOpenAIWithContextLimit(openaiClient, hivemindClient, 4000, opts...)
+}
+
+// WrapOpenAIWithContextLimit is like [WrapOpenAI] but allows setting the Hivemind context window size.
+func WrapOpenAIWithContextLimit(openaiClient openai.Client, hivemindClient Client, contextMaxTokens int, opts ...SessionOption) *WrappedOpenAI {
+	maxTok := contextMaxTokens
+	if maxTok <= 0 {
+		maxTok = 4000
+	}
 	session := NewSession(hivemindClient, opts...)
 	return &WrappedOpenAI{
-		inner:   openaiClient,
-		session: session,
+		inner:         openaiClient,
+		session:       session,
+		contextMaxTok: maxTok,
 	}
 }
 
@@ -32,36 +48,38 @@ func (w *WrappedOpenAI) Session() *AgentSession {
 	return w.session
 }
 
-// Inner returns the underlying OpenAI client for direct access.
-func (w *WrappedOpenAI) Inner() *openai.Client {
+// Inner returns the wrapped OpenAI client for direct API access.
+func (w *WrappedOpenAI) Inner() openai.Client {
 	return w.inner
 }
 
-// CreateChatCompletion calls the OpenAI API with Hivemind context auto-injected
-// as a system message prepended to the request messages. The response is
-// automatically recorded back to Hivemind.
-func (w *WrappedOpenAI) CreateChatCompletion(ctx context.Context, req openai.ChatCompletionRequest) (openai.ChatCompletionResponse, error) {
-	hmContext, err := w.session.GetContext(ctx, 4000)
+// CreateChatCompletion calls [openai.ChatCompletionService.New] with Hivemind context prepended
+// as a system message, then records the assistant reply via [AgentSession.RecordResponse].
+//
+// Extra [option.RequestOption] values are forwarded to the OpenAI client (retries, headers, etc.).
+func (w *WrappedOpenAI) CreateChatCompletion(
+	ctx context.Context,
+	params openai.ChatCompletionNewParams,
+	opts ...option.RequestOption,
+) (*openai.ChatCompletion, error) {
+	hmContext, err := w.session.GetContext(ctx, w.contextMaxTok)
 	if err != nil {
-		return openai.ChatCompletionResponse{}, fmt.Errorf("hivemind get context: %w", err)
+		return nil, fmt.Errorf("hivemind get context: %w", err)
 	}
 
 	if hmContext != "" {
-		contextMsg := openai.ChatCompletionMessage{
-			Role:    openai.ChatMessageRoleSystem,
-			Content: hmContext,
-		}
-		req.Messages = append([]openai.ChatCompletionMessage{contextMsg}, req.Messages...)
+		systemMsg := openai.SystemMessage(hmContext)
+		params.Messages = append([]openai.ChatCompletionMessageParamUnion{systemMsg}, params.Messages...)
 	}
 
-	resp, err := w.inner.CreateChatCompletion(ctx, req)
+	resp, err := w.inner.Chat.Completions.New(ctx, params, opts...)
 	if err != nil {
 		return resp, err
 	}
 
 	if len(resp.Choices) > 0 {
 		content := resp.Choices[0].Message.Content
-		tokensUsed := resp.Usage.TotalTokens
+		tokensUsed := int(resp.Usage.TotalTokens)
 		if recordErr := w.session.RecordResponse(ctx, content, tokensUsed); recordErr != nil {
 			return resp, fmt.Errorf("hivemind record response: %w", recordErr)
 		}

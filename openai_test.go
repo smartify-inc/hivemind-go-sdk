@@ -6,20 +6,24 @@ import (
 	"context"
 	"testing"
 
-	openai "github.com/sashabaranov/go-openai"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 
 	hivemind "github.com/smartify-inc/hivemind-go-sdk"
 	"github.com/smartify-inc/hivemind-go-sdk/mock"
 )
 
-// NOTE: These tests use the build tag "openai" so they only compile when
-// the go-openai dependency is present. Since WrappedOpenAI.CreateChatCompletion
-// calls the real OpenAI client internally, these tests verify construction
-// and session wiring rather than full HTTP round-trips.
+func testOpenAIClient(t *testing.T) openai.Client {
+	t.Helper()
+	return openai.NewClient(
+		option.WithAPIKey("sk-test-dummy"),
+		option.WithBaseURL("https://example.invalid/v1"),
+	)
+}
 
 func TestWrapOpenAIConstruction(t *testing.T) {
 	mc := mock.NewClient()
-	oaiClient := openai.NewClient("sk-test")
+	oaiClient := testOpenAIClient(t)
 
 	wrapped := hivemind.WrapOpenAI(oaiClient, mc,
 		hivemind.WithWorkflowID("wf-1"),
@@ -30,14 +34,11 @@ func TestWrapOpenAIConstruction(t *testing.T) {
 	if wrapped.Session().RunID() != "run-oai" {
 		t.Errorf("RunID = %q, want %q", wrapped.Session().RunID(), "run-oai")
 	}
-	if wrapped.Inner() != oaiClient {
-		t.Error("Inner() should return the original OpenAI client")
-	}
 }
 
 func TestWrapOpenAIEndWithoutStart(t *testing.T) {
 	mc := mock.NewClient()
-	oaiClient := openai.NewClient("sk-test")
+	oaiClient := testOpenAIClient(t)
 	ctx := context.Background()
 
 	wrapped := hivemind.WrapOpenAI(oaiClient, mc,
