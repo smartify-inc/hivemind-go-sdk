@@ -6,7 +6,7 @@ Go client for [Smartify Hivemind](https://smartify.ai) — persistent memory and
 
 ## Requirements
 
-- Go 1.24+
+- Go 1.26+
 
 ## Install
 
